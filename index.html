@@ -81,6 +81,12 @@
         <input id="login-password" type="password" placeholder="Your password" autocomplete="current-password">
       </div>
       <button class="btn btn-primary" onclick="login()">Sign In</button>
+      <p class="auth-help"><a href="#" onclick="toggleForgot();return false;">Forgot password?</a></p>
+      <div id="forgot-msg" class="auth-hint hidden">
+        We don't have automatic password resets yet. Email the admin at
+        <a href="mailto:zajuzam@outlook.com?subject=Arsenal Predictor - password reset&body=Hi, please reset the password for my account.%0D%0AMy username or email is: ">zajuzam@outlook.com</a>
+        and we'll reset it for you as soon as we can.
+      </div>
     </div>
 
     <!-- Register Form -->

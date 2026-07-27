@@ -246,6 +246,12 @@ async function register() {
 
 function showAuthError(el, msg) { el.textContent = msg; el.style.display = 'block'; }
 
+// Reveal/hide the "email the admin to reset" note under the login form.
+function toggleForgot() {
+  const el = document.getElementById('forgot-msg');
+  if (el) el.classList.toggle('hidden');
+}
+
 async function logout() {
   await sb.auth.signOut();
   currentUser = null; currentSeason = null; allFixtures = []; allPredictions = {};
