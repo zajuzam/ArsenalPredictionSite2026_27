@@ -1,5 +1,5 @@
 /* Arsenal Predictor — service worker (PWA offline app shell) */
-const CACHE = 'arsenal-predictor-v1';
+const CACHE = 'arsenal-predictor-v2';
 const SHELL = [
   './',
   './index.html',
@@ -27,9 +27,11 @@ self.addEventListener('fetch', (e) => {
   // Only handle same-origin GETs. Let Supabase / flagcdn / ESPN calls go straight to the network.
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
 
-  // Network-first for the app shell so updates land; fall back to cache when offline.
+  // Network-first, bypassing the HTTP cache ({ cache: 'no-store' }) so a fresh
+  // deploy always lands and you never get a stale app.js against a new index.html.
+  // Falls back to the cached copy only when the network is unavailable (offline).
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, { cache: 'no-store' })
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
