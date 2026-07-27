@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Arsenal Predictor 2026/27</title>
+  <script>
+    /* Apply the saved theme before styles paint (avoids a flash).
+       Defaults to dark; the header toggle updates this + localStorage. */
+    (function () {
+      try {
+        var t = localStorage.getItem('predictor_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
   <link rel="icon" type="image/png" href="https://a.espncdn.com/i/teamlogos/soccer/500/359.png">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#EF0107">
@@ -34,6 +46,7 @@
       <button onclick="showPage('howto')"       id="nav-howto"       class="nav-btn">How to Play</button>
       <button onclick="showPage('contact')"     id="nav-contact"     class="nav-btn">Contact</button>
       <button onclick="showPage('admin')"       id="nav-admin"       class="nav-btn nav-admin hidden">⚙ Admin</button>
+      <button onclick="toggleTheme()"           id="theme-toggle"    class="nav-btn nav-theme" title="Switch light / dark theme">🌙 Dark</button>
       <button onclick="logout()"                                      class="nav-btn nav-logout">Logout</button>
     </nav>
   </div>
