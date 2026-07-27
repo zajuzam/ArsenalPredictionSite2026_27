@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Local SQLite dev database (old local-server setup)
+predictor.db
+predictor.db-shm
+predictor.db-wal
+
+# Database backups / data dumps (may contain emails + PIN hashes — keep out of remote)
+backups/
+
+# Capacitor / mobile build output
+android/
+ios/
+.gradle/
+*.apk
+*.aab
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/

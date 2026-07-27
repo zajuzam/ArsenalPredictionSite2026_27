@@ -1,0 +1,40 @@
+#!/bin/sh
+# ============================================================
+# Arsenal Predictor — pre-push hook
+# Runs the smoke tests before every push. If any test fails,
+# the push is aborted.
+#
+# This hook is version-controlled. Activate it once per clone:
+#   git config core.hooksPath .githooks
+#
+# Emergency bypass (skips the tests):
+#   git push --no-verify
+# ============================================================
+
+echo "▶ Running smoke tests before push..."
+
+ROOT="$(git rev-parse --show-toplevel)"
+TEST="$ROOT/scripts/smoke-test.js"
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "✗ Node.js not found on PATH. Install Node 18+ (or bypass with: git push --no-verify)."
+  exit 1
+fi
+
+if [ ! -f "$TEST" ]; then
+  echo "✗ Test file not found: $TEST"
+  exit 1
+fi
+
+node "$TEST"
+STATUS=$?
+
+if [ "$STATUS" -ne 0 ]; then
+  echo ""
+  echo "✗ Smoke tests failed — push aborted."
+  echo "  Fix the failures above, or bypass with: git push --no-verify"
+  exit 1
+fi
+
+echo "✓ Smoke tests passed — continuing push."
+exit 0

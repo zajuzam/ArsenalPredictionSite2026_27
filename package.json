@@ -1,0 +1,29 @@
+{
+  "name": "arsenal-predictor",
+  "version": "1.0.0",
+  "description": "Arsenal EPL Prediction Website + mobile app (Capacitor)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node scripts/smoke-test.js",
+    "install-hooks": "git config core.hooksPath .githooks",
+    "build:web": "node scripts/copy-web.js",
+    "sync": "npm run build:web && npx cap sync",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios",
+    "assets": "npx @capacitor/assets generate --iconBackgroundColor '#EF0107' --splashBackgroundColor '#EF0107'"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.0.0"
+  }
+}

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arsenal Predictor 2026/27</title>
+  <link rel="icon" type="image/png" href="https://a.espncdn.com/i/teamlogos/soccer/500/359.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#EF0107">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Arsenal Predictor">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────────────── -->
+<header id="app-header" class="hidden">
+  <div class="header-inner">
+    <div class="logo">
+      <img class="logo-crest" src="https://a.espncdn.com/i/teamlogos/soccer/500/359.png" alt="Arsenal crest">
+      <span class="logo-text">Arsenal <strong>Predictor</strong></span>
+    </div>
+    <button class="nav-toggle" onclick="toggleNav()" aria-label="Toggle menu">☰</button>
+    <nav id="main-nav">
+      <button onclick="showPage('fixtures')"   id="nav-fixtures"    class="nav-btn">Fixtures</button>
+      <button onclick="showPage('leaderboard')" id="nav-leaderboard" class="nav-btn">Leaderboard</button>
+      <button onclick="showPage('mypicks')"     id="nav-mypicks"     class="nav-btn">My Picks</button>
+      <button onclick="showPage('about')"       id="nav-about"       class="nav-btn">About</button>
+      <button onclick="showPage('howto')"       id="nav-howto"       class="nav-btn">How to Play</button>
+      <button onclick="showPage('contact')"     id="nav-contact"     class="nav-btn">Contact</button>
+      <button onclick="showPage('admin')"       id="nav-admin"       class="nav-btn nav-admin hidden">⚙ Admin</button>
+      <button onclick="logout()"                                      class="nav-btn nav-logout">Logout</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ── Auth Page ────────────────────────────────────────────── -->
+<div id="page-auth" class="page active">
+  <div class="auth-card">
+    <div class="auth-hero">
+      <img class="auth-crest" src="https://a.espncdn.com/i/teamlogos/soccer/500/359.png" alt="Arsenal crest">
+      <h1>Arsenal Predictor</h1>
+      <p>Premier League 2026/27 · Title Defence</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab"        onclick="switchAuthTab('register')">Join</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="auth-login" class="auth-body">
+      <div id="login-error" class="auth-error"></div>
+      <div class="form-group">
+        <label>Username</label>
+        <input id="login-username" type="text" placeholder="Enter your username" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>4-Digit PIN</label>
+        <input id="login-pin" type="password" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="current-password">
+        <p class="pin-hint">Your secret 4-digit PIN</p>
+      </div>
+      <button class="btn btn-primary" onclick="login()">Sign In</button>
+    </div>
+
+    <!-- Register Form -->
+    <div id="auth-register" class="auth-body hidden">
+      <div id="register-error" class="auth-error"></div>
+      <div class="form-group">
+        <label>Choose a Username</label>
+        <input id="reg-username" type="text" placeholder="e.g. GunnerSaju" maxlength="20" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Email <span class="req-mark">*</span></label>
+        <input id="reg-email" type="email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="form-group">
+        <label>Choose a 4-Digit PIN</label>
+        <input id="reg-pin" type="password" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="new-password">
+        <p class="pin-hint">Remember this PIN — you'll need it to log in</p>
+      </div>
+      <div class="form-group">
+        <label>Confirm PIN</label>
+        <input id="reg-pin2" type="password" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary" onclick="register()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Fixtures Page ─────────────────────────────────────────── -->
+<div id="page-fixtures" class="page">
+  <div class="page-content">
+    <div class="page-header">
+      <h2>Fixtures &amp; Predictions <span class="season-badge" id="season-badge"></span></h2>
+      <p class="subtitle">Predict the score before kick-off · Exact score = 3pts · Correct result = 1pt</p>
+    </div>
+    <div class="fixtures-filter">
+      <button class="filter-btn active" onclick="filterFixtures('all',this)">All 38</button>
+      <button class="filter-btn" onclick="filterFixtures('home',this)">🏠 Home</button>
+      <button class="filter-btn" onclick="filterFixtures('away',this)">✈ Away</button>
+      <button class="filter-btn" onclick="filterFixtures('upcoming',this)">Upcoming</button>
+      <button class="filter-btn" onclick="filterFixtures('predicted',this)">Predicted</button>
+      <button class="filter-btn" onclick="filterFixtures('completed',this)">Completed</button>
+    </div>
+    <div id="fixtures-list">
+      <div class="loading-state"><div class="spinner"></div><p>Loading fixtures…</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Leaderboard Page ──────────────────────────────────────── -->
+<div id="page-leaderboard" class="page">
+  <div class="page-content">
+    <div class="page-header">
+      <h2>Leaderboard <span class="season-badge" id="lb-season-badge"></span></h2>
+      <p class="subtitle">Top predictors this season</p>
+    </div>
+    <div class="prize-banner">
+      <span class="prize-icon">🏆</span>
+      <div>
+        <div class="prize-title">Season Prize</div>
+        <div class="prize-text">The winner receives an <strong>Original Arsenal Home Shirt</strong>!</div>
+      </div>
+    </div>
+    <div id="leaderboard-list">
+      <div class="loading-state"><div class="spinner"></div><p>Loading…</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── My Picks Page ─────────────────────────────────────────── -->
+<div id="page-mypicks" class="page">
+  <div class="page-content">
+    <div class="page-header">
+      <h2>My Picks</h2>
+      <p class="subtitle">Your predictions and season stats</p>
+    </div>
+    <div id="mypicks-body">
+      <div class="loading-state"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Admin Page ────────────────────────────────────────────── -->
+<div id="page-admin" class="page">
+  <div class="page-content">
+    <div class="page-header">
+      <h2>Admin Panel ⚙</h2>
+      <p class="subtitle">Manage fixtures and results</p>
+    </div>
+    <div class="admin-grid">
+      <!-- Stats -->
+      <div>
+        <div class="admin-card">
+          <h3>Season Stats</h3>
+          <div class="stats-grid">
+            <div class="stat-box"><div class="stat-num" id="stat-players">—</div><div class="stat-label">Players</div></div>
+            <div class="stat-box"><div class="stat-num" id="stat-completed">—</div><div class="stat-label">Played</div></div>
+            <div class="stat-box"><div class="stat-num" id="stat-predictions">—</div><div class="stat-label">Predictions</div></div>
+            <div class="stat-box"><div class="stat-num" id="stat-remaining">—</div><div class="stat-label">Remaining</div></div>
+          </div>
+        </div>
+        <div class="admin-card mt-4">
+          <h3>Actions</h3>
+          <div class="admin-btn-row">
+            <button class="btn btn-gold btn-sm" onclick="adminOpenResultsModal()">📋 Enter Results</button>
+            <button class="btn btn-secondary btn-sm" id="fetch-api-btn" onclick="adminFetchResults()">🌐 Fetch from API</button>
+          </div>
+          <p style="font-size:0.75rem;color:var(--gray-400)">
+            "Enter Results" lets you manually input scores for completed matches.<br>
+            "Fetch from API" auto-pulls results from football-data.org (requires API key in config.js).
+          </p>
+        </div>
+      </div>
+      <!-- Results panel -->
+      <div class="admin-card">
+        <h3>Pending Results (matches passed kick-off)</h3>
+        <div id="admin-pending-list">
+          <div class="loading-state"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manage Players -->
+    <div class="admin-card mt-4">
+      <h3>Manage Players</h3>
+      <p style="font-size:0.75rem;color:var(--gray-400)">Reset a player's 4-digit PIN if they've been locked out.</p>
+      <div id="admin-players-list">
+        <div class="loading-state"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── About Page ─────────────────────────────────────────────── -->
+<div id="page-about" class="page">
+  <div class="page-content">
+    <div class="about-card">
+      <div class="about-hero">
+        <div class="cannon">⚽</div>
+        <h2>About This Site</h2>
+        <p>Arsenal Predictor — 2026/27 Season</p>
+      </div>
+      <div class="about-body" id="about-body">
+        <h3>My Passion for Arsenal</h3>
+        <p>I am a lifelong and passionate Arsenal fan, and this website was created purely out of my love for the club and the beautiful game of football.</p>
+        <p>My journey as an Arsenal supporter began when Dennis Bergkamp joined the club. As a huge supporter of the Netherlands national football team, I was already a big admirer of Bergkamp's incredible talent, intelligence, and elegant style of play. When he became an Arsenal player, I naturally started following the club—and over the years, Arsenal became a huge part of my life.</p>
+        <p>Since then, I have followed Arsenal through the highs and lows: the unforgettable victories, the difficult seasons, the legendary players, and the moments that have made being a Gooner such a special experience. Arsenal is more than just a football club to me—it is a passion, a tradition, and a community shared by millions of fans around the world.</p>
+        <p>One of the happiest moments of my journey as an Arsenal supporter came in the 2025/26 season, when Arsenal finally won the Premier League title after a 22-year wait. Seeing Arsenal become champions again was an incredibly emotional and unforgettable moment for me and for Gooners everywhere.</p>
+        <p>I created this website to celebrate Arsenal Football Club, its history, its players, its achievements, and the passion of its supporters. This is my personal tribute to the club I love.</p>
+        <p class="about-signoff">Come on you Gunners!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── How to Play Page ──────────────────────────────────────── -->
+<div id="page-howto" class="page">
+  <div class="page-content">
+    <div class="about-card">
+      <div class="about-hero">
+        <div class="cannon">📖</div>
+        <h2>How to Play</h2>
+        <p>Predict the scores. Bank the points. Top the table.</p>
+      </div>
+      <div class="about-body">
+        <h3>1. Join</h3>
+        <p>Create an account with a username, email and a 4-digit PIN. Your PIN is how you log back in, so keep it safe — an admin can reset it if you ever forget.</p>
+        <h3>2. Predict the score</h3>
+        <p>For each of Arsenal's 38 league games, enter your predicted final score and hit Predict. You can change a prediction as many times as you like until it locks.</p>
+        <h3>3. Deadline</h3>
+        <p>Predictions lock 30 minutes before kick-off. Once locked, the card greys out and can no longer be changed — the countdown timer on each card shows how long you have left.</p>
+        <h3>4. Scoring</h3>
+        <p>Exact score = <strong>3 points</strong>. Correct result (win, draw or loss) with the wrong score = <strong>1 point</strong>. Anything else = 0.</p>
+        <h3>5. Leaderboard</h3>
+        <p>Points build up across the season. The Leaderboard shows your rank, your country flag, and how many exact scores and correct results you've landed.</p>
+        <h3>🏆 The Prize</h3>
+        <p>The player who finishes top of the leaderboard at the end of the season wins an <strong>Original Arsenal Home Shirt</strong>. Predict well all season long for your shot at the prize!</p>
+        <h3>Tips</h3>
+        <p>Every card shows the stadium, both team captains, and how all the other players predicted the match — use the crowd split to guide (or defy) your pick.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Contact Page ──────────────────────────────────────────── -->
+<div id="page-contact" class="page">
+  <div class="page-content">
+    <div class="about-card">
+      <div class="about-hero">
+        <div class="cannon">✉️</div>
+        <h2>Contact</h2>
+        <p>Get in touch with the team behind the site</p>
+      </div>
+      <div class="about-body">
+        <div class="contact-block">
+          <div class="contact-label">Site Developed By</div>
+          <div class="contact-value">Pravda Software LLC</div>
+        </div>
+        <div class="contact-block">
+          <div class="contact-label">Email</div>
+          <div class="contact-value"><a href="mailto:pravdasoftware@gmail.com">pravdasoftware@gmail.com</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal ────────────────────────────────────────────────── -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-title">Results</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ── Toast Container ──────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ── Scripts ──────────────────────────────────────────────── -->
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  // Register the service worker for PWA install/offline (ignored inside the native app).
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+</script>
+</body>
+</html>

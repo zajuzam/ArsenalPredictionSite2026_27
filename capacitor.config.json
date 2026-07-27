@@ -1,0 +1,16 @@
+{
+  "appId": "com.pravdasoftware.arsenalpredictor",
+  "appName": "Arsenal Predictor",
+  "webDir": "www",
+  "backgroundColor": "#EF0107",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#EF0107",
+      "showSpinner": false
+    }
+  }
+}
