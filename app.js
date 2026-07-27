@@ -12,6 +12,12 @@ let currentFilter = 'all';
 
 const API = CONFIG.apiUrl;
 
+// ── Supabase client ──────────────────────────────────────────
+// Handles auth (email + password), persistent sessions, and
+// automatically attaches the signed-in user's token to DB calls
+// so row-level security knows who is asking.
+const sb = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+
 // ── Theme (light / dark) ─────────────────────────────────────
 // The chosen theme is stored on <html data-theme="…"> and remembered
 // in localStorage. An inline script in index.html applies it before
@@ -28,20 +34,40 @@ function toggleTheme() {
   applyTheme(cur === 'dark' ? 'light' : 'dark');
 }
 
+// ── Consent banner (essential local storage only) ────────────
+function maybeShowCookieBanner() {
+  try { if (localStorage.getItem('predictor_cookie_ok')) return; } catch (e) {}
+  const b = document.getElementById('cookie-banner');
+  if (b) b.classList.remove('hidden');
+}
+function acceptCookies() {
+  try { localStorage.setItem('predictor_cookie_ok', '1'); } catch (e) {}
+  const b = document.getElementById('cookie-banner');
+  if (b) b.classList.add('hidden');
+}
+
 // ── Bootstrap ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
-  const saved = localStorage.getItem('predictor_user');
-  if (saved) {
-    try {
-      currentUser = JSON.parse(saved);
-      await enterApp();
-    } catch {
-      localStorage.removeItem('predictor_user');
-    }
+  maybeShowCookieBanner();
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    if (await loadCurrentProfile()) await enterApp();
   }
+  // If the session ends (e.g. token revoked), drop back to the login screen.
+  sb.auth.onAuthStateChange((_event, s) => { if (!s) showAuthPage(); });
+}
+
+// Fetch the signed-in user's profile row (username, points, admin flag).
+async function loadCurrentProfile() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return false;
+  const { data, error } = await sb.from('arsenal_profiles').select('*').eq('id', user.id).single();
+  if (error || !data) return false;
+  currentUser = data;
+  return true;
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -143,98 +169,95 @@ async function hashPin(pin) {
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// ── Auth ─────────────────────────────────────────────────────
+// ── Auth (Supabase email + password) ─────────────────────────
 function switchAuthTab(tab) {
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
+  if (typeof event !== 'undefined' && event.target) event.target.classList.add('active');
+  document.getElementById('auth-login').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('auth-register').classList.toggle('hidden', tab !== 'register');
+}
+// Switch tabs programmatically (no click event needed).
+function switchAuthTabTo(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t, i) =>
+    t.classList.toggle('active', (tab === 'login') === (i === 0)));
   document.getElementById('auth-login').classList.toggle('hidden', tab !== 'login');
   document.getElementById('auth-register').classList.toggle('hidden', tab !== 'register');
 }
 
 async function login() {
-  const username = document.getElementById('login-username').value.trim().toLowerCase();
-  const pin      = document.getElementById('login-pin').value.trim();
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
   const errEl    = document.getElementById('login-error');
   errEl.style.display = 'none';
 
-  if (!username || !pin) { showAuthError(errEl, 'Please fill in all fields.'); return; }
-  if (!/^\d{4}$/.test(pin)) { showAuthError(errEl, 'PIN must be exactly 4 digits.'); return; }
-  if (username === 'admin' && pin !== CONFIG.adminPin) {
-    showAuthError(errEl, 'Invalid admin credentials.'); return;
-  }
+  if (!email || !password) { showAuthError(errEl, 'Please enter your email and password.'); return; }
 
-  const pin_hash = await hashPin(pin);
-  const result = await selectFromTable('players',
-    `username=eq.${encodeURIComponent(username)}&pin_hash=eq.${encodeURIComponent(pin_hash)}&select=*`);
-
-  if (result.error || !result.data || result.data.length === 0) {
-    showAuthError(errEl, 'Incorrect username or PIN.'); return;
-  }
-
-  currentUser = result.data[0];
-  localStorage.setItem('predictor_user', JSON.stringify(currentUser));
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) { showAuthError(errEl, error.message || 'Could not sign in.'); return; }
+  if (!(await loadCurrentProfile())) { showAuthError(errEl, 'Signed in, but your profile could not be loaded.'); return; }
   await enterApp();
 }
 
 async function register() {
-  const username = document.getElementById('reg-username').value.trim().toLowerCase();
-  const email    = document.getElementById('reg-email').value.trim();
-  const pin      = document.getElementById('reg-pin').value.trim();
-  const pin2     = document.getElementById('reg-pin2').value.trim();
-  const errEl    = document.getElementById('register-error');
+  const username  = document.getElementById('reg-username').value.trim();
+  const email     = document.getElementById('reg-email').value.trim();
+  const password  = document.getElementById('reg-password').value;
+  const password2 = document.getElementById('reg-password2').value;
+  const errEl     = document.getElementById('register-error');
   errEl.style.display = 'none';
 
-  if (!username || !email || !pin || !pin2) { showAuthError(errEl, 'Please fill in all fields.'); return; }
-  if (username === 'admin' && pin !== CONFIG.adminPin) {
-    showAuthError(errEl, 'Invalid admin PIN.'); return;
-  }
-  if (username !== 'admin' && !/^[a-z0-9_]{3,20}$/.test(username)) {
+  if (!username || !email || !password || !password2) { showAuthError(errEl, 'Please fill in all fields.'); return; }
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
     showAuthError(errEl, 'Username: 3-20 chars, letters/numbers/underscore only.'); return;
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     showAuthError(errEl, 'Please enter a valid email address.'); return;
   }
-  if (!/^\d{4}$/.test(pin)) { showAuthError(errEl, 'PIN must be exactly 4 digits.'); return; }
-  if (pin !== pin2) { showAuthError(errEl, 'PINs do not match.'); return; }
+  if (password.length < 6) { showAuthError(errEl, 'Password must be at least 6 characters.'); return; }
+  if (password !== password2) { showAuthError(errEl, 'Passwords do not match.'); return; }
 
-  const pin_hash = await hashPin(pin);
-  const is_admin = username === 'admin';
+  // Username must be free (checked via a locked-down database function).
+  const { data: available, error: uErr } = await sb.rpc('arsenal_username_available', { p_username: username });
+  if (uErr) { showAuthError(errEl, 'Could not check username, please try again.'); return; }
+  if (!available) { showAuthError(errEl, 'That username is already taken.'); return; }
 
-  // Capture the visitor's IP + country (best-effort) for the leaderboard flag.
+  // Best-effort country for the leaderboard flag.
   const geo = await fetchGeo();
 
-  // Push the new player straight into the Supabase arsenal_players table.
-  // id is auto-generated (numeric) by the database, so we don't send one.
-  const result = await pushToTable('players', {
-    username,
+  const { data, error } = await sb.auth.signUp({
     email,
-    pin_hash,
-    is_admin,
-    ip_address:   geo.ip || null,
-    country_code: geo.country_code || null,
+    password,
+    options: { data: { username, country_code: geo.country_code || null } },
   });
+  if (error) { showAuthError(errEl, error.message || 'Could not create account.'); return; }
 
-  if (result.error) {
-    if (result.error.code === '23505') showAuthError(errEl, 'Username already taken.');
-    else showAuthError(errEl, result.error.message || 'Could not create account.');
+  // If email confirmation is on, there is no session yet — ask them to confirm.
+  if (!data.session) {
+    showAuthError(errEl, 'Account created! Check your email to confirm, then sign in.');
+    switchAuthTabTo('login');
     return;
   }
-
-  currentUser = result.data;
-  localStorage.setItem('predictor_user', JSON.stringify(currentUser));
+  if (!(await loadCurrentProfile())) {
+    showAuthError(errEl, 'Account created — please sign in.'); switchAuthTabTo('login'); return;
+  }
   showToast('Welcome, ' + currentUser.username + '! 🔴', 'success');
   await enterApp();
 }
 
 function showAuthError(el, msg) { el.textContent = msg; el.style.display = 'block'; }
 
-function logout() {
-  localStorage.removeItem('predictor_user');
+async function logout() {
+  await sb.auth.signOut();
   currentUser = null; currentSeason = null; allFixtures = []; allPredictions = {};
+  showAuthPage();
+}
+
+// Reset the UI back to the login screen and clear the auth fields.
+function showAuthPage() {
   document.getElementById('app-header').classList.add('hidden');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-auth').classList.add('active');
-  ['login-username','login-pin','reg-username','reg-email','reg-pin','reg-pin2'].forEach(id => {
+  ['login-email','login-password','reg-username','reg-email','reg-password','reg-password2'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
 }
@@ -249,8 +272,8 @@ async function enterApp() {
 
 // ── Data ─────────────────────────────────────────────────────
 async function loadSeason() {
-  const res = await selectFromTable('seasons', 'is_active=eq.true&select=*');
-  currentSeason = (res.data && res.data[0]) || null;
+  const { data } = await sb.from('arsenal_seasons').select('*').eq('is_active', true).limit(1);
+  currentSeason = (data && data[0]) || null;
   if (currentSeason) {
     document.getElementById('season-badge').textContent   = currentSeason.name;
     document.getElementById('lb-season-badge').textContent = currentSeason.name;
@@ -259,36 +282,26 @@ async function loadSeason() {
 
 async function loadFixtures() {
   if (!currentSeason) return;
-  const res = await selectFromTable('fixtures',
-    `season_id=eq.${encodeURIComponent(currentSeason.id)}&order=match_week.asc&select=*`);
-  allFixtures = res.data || [];
+  const { data } = await sb.from('arsenal_fixtures')
+    .select('*').eq('season_id', currentSeason.id).order('match_week', { ascending: true });
+  allFixtures = data || [];
 }
 
 async function loadPredictions() {
   if (!currentUser) return;
-  const res = await selectFromTable('predictions',
-    `player_id=eq.${encodeURIComponent(currentUser.id)}&select=*`);
+  // Row-level security limits this to the signed-in user's own predictions.
+  const { data } = await sb.from('arsenal_predictions').select('*').eq('user_id', currentUser.id);
   allPredictions = {};
-  (res.data || []).forEach(p => { allPredictions[p.fixture_id] = p; });
+  (data || []).forEach(p => { allPredictions[p.fixture_id] = p; });
 }
 
-// Aggregate ALL players' predictions per fixture into Arsenal-win / draw / opponent-win counts.
+// Per-fixture Arsenal-win / draw / opponent-win counts, from the anonymous
+// aggregate view (no individual predictions are exposed to the browser).
 async function loadPredictionTallies() {
-  const res = await selectFromTable('predictions', 'select=fixture_id,predicted_home,predicted_away');
+  const { data } = await sb.from('arsenal_fixture_votes').select('*');
   predictionTallies = {};
-  const fixtureById = {};
-  allFixtures.forEach(f => { fixtureById[f.id] = f; });
-
-  (res.data || []).forEach(p => {
-    const f = fixtureById[p.fixture_id];
-    if (!f) return;
-    if (!predictionTallies[p.fixture_id]) predictionTallies[p.fixture_id] = { arsenal: 0, draw: 0, opp: 0 };
-    const t = predictionTallies[p.fixture_id];
-    if (p.predicted_home === p.predicted_away) { t.draw++; return; }
-    const homeWon = p.predicted_home > p.predicted_away;
-    const arsenalIsHome = f.home_team === 'Arsenal';
-    if ((homeWon && arsenalIsHome) || (!homeWon && !arsenalIsHome)) t.arsenal++;
-    else t.opp++;
+  (data || []).forEach(v => {
+    predictionTallies[v.fixture_id] = { arsenal: v.arsenal || 0, draw: v.draw || 0, opp: v.opp || 0 };
   });
 }
 
@@ -657,18 +670,14 @@ async function savePrediction(fixtureId) {
   if (isNaN(home) || isNaN(away) || home < 0 || away < 0 || home > 20 || away > 20) {
     showToast('Enter valid scores (0–20) for both teams.', 'error'); return;
   }
-  // Upsert on (player_id, fixture_id) so re-predicting updates the existing row.
-  const res = await upsertToTable('predictions', {
-    player_id: currentUser.id,
-    fixture_id: fixtureId,
-    predicted_home: home,
-    predicted_away: away,
-    updated_at: new Date().toISOString(),
-  }, 'player_id,fixture_id');
-  if (res.error) { showToast('Could not save prediction.', 'error'); return; }
-  allPredictions[fixtureId] = res.data;
+  // Save via the secure server function (also re-checks the lock server-side).
+  const { error } = await sb.rpc('arsenal_save_prediction', {
+    p_fixture_id: fixtureId, p_home: home, p_away: away,
+  });
+  if (error) { showToast(error.message || 'Could not save prediction.', 'error'); return; }
   showToast('Prediction saved! 🔴', 'success');
   celebrate();
+  await loadPredictions();
   await loadPredictionTallies();
   renderFixtures();
 }
@@ -678,24 +687,12 @@ async function renderLeaderboard() {
   const container = document.getElementById('leaderboard-list');
   container.innerHTML = skeletonRows(6);
 
-  const res = await selectFromTable('players',
-    'is_admin=eq.false&order=total_points.desc&select=id,username,total_points,country_code');
-  const players = res.data || [];
+  const { data } = await sb.from('arsenal_leaderboard').select('*').order('total_points', { ascending: false });
+  const players = data || [];
 
-  // Need fixture statuses to compute accuracy (predictions on completed games).
-  if (!allFixtures.length) await loadFixtures();
-  const completedIds = new Set(allFixtures.filter(f => f.status === 'completed').map(f => f.id));
-
-  const predRes = await selectFromTable('predictions', 'select=player_id,fixture_id,points_earned');
+  // Stats come straight from the aggregate view — no per-pick data is exposed.
   const stats = {};
-  (predRes.data || []).forEach(p => {
-    if (!stats[p.player_id]) stats[p.player_id] = { exact: 0, correct: 0, played: 0 };
-    if (completedIds.has(p.fixture_id)) {
-      stats[p.player_id].played++;
-      if (p.points_earned === 3) stats[p.player_id].exact++;
-      else if (p.points_earned === 1) stats[p.player_id].correct++;
-    }
-  });
+  players.forEach(u => { stats[u.id] = { exact: u.exact_count || 0, correct: u.correct_count || 0, played: u.played_count || 0 }; });
   const accOf = s => s.played ? Math.round(((s.exact + s.correct) / s.played) * 100) : null;
 
   if (!players.length) {
@@ -815,21 +812,15 @@ async function renderAdmin() {
   if (!currentUser?.is_admin) return;
   await loadFixtures();
 
-  // Stats computed directly from Supabase.
-  const [playersRes, predsRes] = await Promise.all([
-    selectFromTable('players', 'is_admin=eq.false&select=id'),
-    selectFromTable('predictions', 'select=id'),
-  ]);
-  const playerCount = (playersRes.data || []).length;
-  const predCount   = (predsRes.data || []).length;
+  // Player count from the public aggregate; individual picks stay private.
+  const { data: lb } = await sb.from('arsenal_leaderboard').select('id');
+  const playerCount = (lb || []).length;
   const completed   = allFixtures.filter(f => f.status === 'completed').length;
   document.getElementById('stat-players').textContent     = playerCount;
-  document.getElementById('stat-predictions').textContent = predCount;
+  document.getElementById('stat-predictions').textContent = '—';
   document.getElementById('stat-completed').textContent   = completed;
   document.getElementById('stat-remaining').textContent   = 38 - completed;
   document.getElementById('fetch-api-btn').classList.toggle('hidden', !CONFIG.footballDataApiKey);
-
-  await renderAdminPlayers();
 
   const now     = new Date();
   const pending = allFixtures.filter(f => f.status === 'scheduled' && new Date(f.match_date) <= now);
@@ -918,8 +909,8 @@ async function submitResult(fixtureId, source) {
   const a    = parseInt(document.getElementById(preA + fixtureId)?.value);
   if (isNaN(h) || isNaN(a) || h < 0 || a < 0) { showToast('Enter valid scores.', 'error'); return; }
 
-  const ok = await applyResult(fixtureId, h, a);
-  if (!ok) { showToast('Failed to save result.', 'error'); return; }
+  const { error } = await sb.rpc('arsenal_admin_set_result', { p_fixture_id: fixtureId, p_home: h, p_away: a });
+  if (error) { showToast(error.message || 'Failed to save result.', 'error'); return; }
 
   const f = allFixtures.find(x => x.id === fixtureId);
   if (f) { f.home_score = h; f.away_score = a; f.status = 'completed'; }
@@ -965,7 +956,7 @@ async function adminFetchResults() {
       const away = normalizeTeamName(m.awayTeam.name);
       const fix  = allFixtures.find(f => normalizeTeamName(f.home_team) === home && normalizeTeamName(f.away_team) === away && f.status === 'scheduled');
       if (fix && m.score?.fullTime?.home != null) {
-        await applyResult(fix.id, m.score.fullTime.home, m.score.fullTime.away);
+        await sb.rpc('arsenal_admin_set_result', { p_fixture_id: fix.id, p_home: m.score.fullTime.home, p_away: m.score.fullTime.away });
         fix.status = 'completed'; fix.home_score = m.score.fullTime.home; fix.away_score = m.score.fullTime.away;
         updated++;
       }

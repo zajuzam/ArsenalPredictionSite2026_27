@@ -168,6 +168,23 @@ nav { display: flex; align-items: center; gap: 4px; }
   color: var(--white);
 }
 .nav-btn.nav-theme:hover { background: rgba(255,255,255,0.2); }
+/* Floating "Buy me a coffee" button — pinned just below the header, top-right. */
+#coffee-float {
+  position: fixed; top: 84px; z-index: 90;
+  /* Align to the right edge of the centred 1100px content column,
+     not the far edge of the browser window. */
+  right: max(20px, calc(50% - 530px));
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--gold); color: #1A1A1A;
+  font-family: var(--font); font-weight: 800; font-size: 0.8rem;
+  text-decoration: none; white-space: nowrap;
+  padding: 8px 15px; border-radius: 22px; box-shadow: var(--shadow);
+  transition: background var(--transition), transform var(--transition);
+}
+#coffee-float:hover { background: var(--gold-light); transform: translateY(-1px); }
+@media (max-width: 600px) {
+  #coffee-float { top: 66px; right: 12px; font-size: 0.72rem; padding: 6px 11px; gap: 4px; }
+}
 
 /* ── Pages ─────────────────────────────────────────────────── */
 .page { display: none; }
@@ -272,6 +289,12 @@ nav { display: flex; align-items: center; gap: 4px; }
   border-color: var(--red);
   box-shadow: 0 0 0 3px rgba(239,1,7,0.1);
 }
+
+/* Typed text in all inputs follows the theme (light on dark, dark on light). */
+input, textarea, select { color: var(--dark); }
+input::placeholder, textarea::placeholder { color: var(--gray-400); opacity: 1; }
+/* Autofill can force a light background + dark text — keep it themed. */
+input:-webkit-autofill { -webkit-text-fill-color: var(--dark); transition: background-color 9999s ease-in-out 0s; }
 
 .pin-hint {
   font-size: 0.78rem;
@@ -1126,3 +1149,41 @@ html, body { overflow-x: hidden; }
   .fc-name { font-size: 0.72rem; }
   .mp-stats { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── Global footer ──────────────────────────────────────────── */
+#site-footer {
+  margin-top: 40px;
+  padding: 24px 20px 34px;
+  border-top: 1px solid var(--gray-200);
+  background: var(--surface);
+  text-align: center;
+  color: var(--gray-400);
+}
+.footer-disclaimer { max-width: 720px; margin: 0 auto 12px; font-size: 0.75rem; line-height: 1.55; }
+.footer-links {
+  display: flex; gap: 8px 18px; justify-content: center; align-items: center;
+  flex-wrap: wrap; margin-bottom: 10px;
+}
+.footer-links a { color: var(--gray-700); text-decoration: none; font-size: 0.82rem; font-weight: 600; }
+.footer-links a:hover { color: var(--red); }
+.footer-coffee {
+  background: var(--gold); color: #1A1A1A !important;
+  padding: 6px 15px; border-radius: 20px; font-weight: 800 !important;
+  transition: background var(--transition);
+}
+.footer-coffee:hover { background: var(--gold-light); color: #1A1A1A !important; }
+.footer-copy { font-size: 0.72rem; }
+
+/* ── Consent banner ─────────────────────────────────────────── */
+#cookie-banner {
+  position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 9997;
+  max-width: 640px; margin: 0 auto;
+  background: var(--surface-2); color: var(--dark);
+  border: 1px solid var(--gray-200); border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 14px 16px; font-size: 0.82rem; line-height: 1.5;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: space-between;
+}
+#cookie-banner a { color: var(--red); font-weight: 600; }
+#cookie-banner .btn { width: auto; padding: 9px 20px; flex-shrink: 0; }
+#cookie-banner.hidden { display: none; }

@@ -52,6 +52,9 @@
   </div>
 </header>
 
+<!-- Floating "Buy me a coffee" — pinned top-right, shows on every page -->
+<a id="coffee-float" href="https://ko-fi.com/zajuzam" target="_blank" rel="noopener">☕ Buy me a coffee</a>
+
 <!-- ── Auth Page ────────────────────────────────────────────── -->
 <div id="page-auth" class="page active">
   <div class="auth-card">
@@ -70,13 +73,12 @@
     <div id="auth-login" class="auth-body">
       <div id="login-error" class="auth-error"></div>
       <div class="form-group">
-        <label>Username</label>
-        <input id="login-username" type="text" placeholder="Enter your username" autocomplete="username">
+        <label>Email</label>
+        <input id="login-email" type="email" placeholder="you@example.com" autocomplete="email">
       </div>
       <div class="form-group">
-        <label>4-Digit PIN</label>
-        <input id="login-pin" type="password" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="current-password">
-        <p class="pin-hint">Your secret 4-digit PIN</p>
+        <label>Password</label>
+        <input id="login-password" type="password" placeholder="Your password" autocomplete="current-password">
       </div>
       <button class="btn btn-primary" onclick="login()">Sign In</button>
     </div>
@@ -93,13 +95,13 @@
         <input id="reg-email" type="email" placeholder="you@example.com" autocomplete="email" required>
       </div>
       <div class="form-group">
-        <label>Choose a 4-Digit PIN</label>
-        <input id="reg-pin" type="password" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="new-password">
-        <p class="pin-hint">Remember this PIN — you'll need it to log in</p>
+        <label>Choose a Password</label>
+        <input id="reg-password" type="password" placeholder="At least 6 characters" autocomplete="new-password">
+        <p class="pin-hint">Use at least 6 characters</p>
       </div>
       <div class="form-group">
-        <label>Confirm PIN</label>
-        <input id="reg-pin2" type="password" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="new-password">
+        <label>Confirm Password</label>
+        <input id="reg-password2" type="password" placeholder="Re-enter your password" autocomplete="new-password">
       </div>
       <button class="btn btn-primary" onclick="register()">Create Account</button>
     </div>
@@ -200,14 +202,6 @@
       </div>
     </div>
 
-    <!-- Manage Players -->
-    <div class="admin-card mt-4">
-      <h3>Manage Players</h3>
-      <p style="font-size:0.75rem;color:var(--gray-400)">Reset a player's 4-digit PIN if they've been locked out.</p>
-      <div id="admin-players-list">
-        <div class="loading-state"><div class="spinner"></div></div>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -285,6 +279,62 @@
   </div>
 </div>
 
+<!-- ── Privacy Policy Page ───────────────────────────────────── -->
+<div id="page-privacy" class="page">
+  <div class="page-content">
+    <div class="about-card">
+      <div class="about-hero">
+        <div class="cannon">🔒</div>
+        <h2>Privacy Policy</h2>
+        <p>How Arsenal Predictor handles your data</p>
+      </div>
+      <div class="about-body">
+        <p style="color:var(--gray-400);font-size:0.85rem">Last updated: 26 July 2026</p>
+
+        <h3>Who we are</h3>
+        <p>Arsenal Predictor is an unofficial, fan-run football prediction game operated by Pravda Software LLC ("we", "us"). We are not affiliated with, endorsed by, or associated with Arsenal Football Club or the Premier League. You can reach us at <a href="mailto:pravdasoftware@gmail.com">pravdasoftware@gmail.com</a>.</p>
+
+        <h3>What we collect</h3>
+        <p>When you create an account we store your chosen username, your email address, and a securely hashed version of your 4-digit PIN (we never store the PIN itself). We also store the score predictions you make. To show a country flag on the leaderboard, we make a best-effort lookup of your approximate country and IP address when you sign up.</p>
+
+        <h3>How we use it</h3>
+        <p>Your data is used only to run the game: to sign you in, save and score your predictions, and display the leaderboard. We do not sell your data, and we do not send you marketing emails unless you have specifically asked us to.</p>
+
+        <h3>Where it is stored</h3>
+        <p>Account and prediction data is stored in our database hosted by Supabase. Some page content (club crests, country flags, web fonts) is loaded from third-party services such as ESPN, flagcdn and Google Fonts, which may receive your IP address as part of delivering those files.</p>
+
+        <h3>Cookies and local storage</h3>
+        <p>We use your browser's local storage only for essential functions — keeping you signed in and remembering your light/dark theme choice. We do not currently use advertising or tracking cookies. If that ever changes, we will update this policy and ask for your consent first.</p>
+
+        <h3>Your rights</h3>
+        <p>You can ask us to show, correct, or delete the personal data we hold about you at any time by emailing <a href="mailto:pravdasoftware@gmail.com">pravdasoftware@gmail.com</a>. If you are in the UK or EU, you also have rights under the UK GDPR / GDPR, including the right to lodge a complaint with your data protection authority.</p>
+
+        <h3>Children</h3>
+        <p>This site is intended for users aged 13 and over. If you believe a child has provided us with personal data, please contact us and we will remove it.</p>
+
+        <p style="margin-top:22px"><button class="btn btn-secondary" style="width:auto;padding:8px 18px" onclick="showPage(currentUser ? 'fixtures' : 'auth')">← Back</button></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Global Footer ─────────────────────────────────────────── -->
+<footer id="site-footer">
+  <p class="footer-disclaimer">Unofficial fan site — not affiliated with, endorsed by, or associated with Arsenal Football Club or the Premier League. All club names, crests and trademarks are the property of their respective owners.</p>
+  <nav class="footer-links">
+    <a href="#" onclick="showPage(currentUser ? 'fixtures' : 'auth');return false;">Home</a>
+    <a href="#" onclick="showPage('privacy');return false;">Privacy</a>
+    <a href="#" onclick="showPage('contact');return false;">Contact</a>
+  </nav>
+  <p class="footer-copy">© 2026 Arsenal Predictor · a fan project</p>
+</footer>
+
+<!-- ── Consent banner ────────────────────────────────────────── -->
+<div id="cookie-banner" class="hidden">
+  <span>We use only essential local storage to keep you signed in and remember your theme — no advertising or tracking cookies. See our <a href="#" onclick="showPage('privacy');return false;">Privacy Policy</a>.</span>
+  <button class="btn btn-primary" onclick="acceptCookies()">Got it</button>
+</div>
+
 <!-- ── Modal ────────────────────────────────────────────────── -->
 <div id="modal-overlay" onclick="closeModal(event)">
   <div class="modal" id="modal-box">
@@ -300,6 +350,7 @@
 <div id="toast-container"></div>
 
 <!-- ── Scripts ──────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="app.js"></script>
 <script>
