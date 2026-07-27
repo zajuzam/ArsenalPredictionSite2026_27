@@ -83,11 +83,16 @@ async function run() {
   ok('username check works (unused name is available)', avail.ok && avail.body === true, 'HTTP ' + avail.status);
 
   line('\nSecurity (should be blocked)');
+  // Protected = the public key gets either an error OR zero rows (row-level
+  // security hides the data). Both mean no emails/picks leak.
+  const rows = (r) => (Array.isArray(r.body) ? r.body.length : (r.ok ? -1 : 0));
   const profiles = await get(C.prefix + 'profiles?select=*');
-  ok('profiles NOT readable with public key', !profiles.ok, 'HTTP ' + profiles.status + ' (expected error)');
+  ok('profiles not exposed (no rows for public key)', !profiles.ok || rows(profiles) === 0,
+     'HTTP ' + profiles.status + ', rows ' + rows(profiles));
 
   const preds = await get(C.prefix + 'predictions?select=*');
-  ok('predictions NOT readable with public key', !preds.ok, 'HTTP ' + preds.status + ' (expected error)');
+  ok('predictions not exposed (no rows for public key)', !preds.ok || rows(preds) === 0,
+     'HTTP ' + preds.status + ', rows ' + rows(preds));
 
   const oldTable = await get(C.prefix + 'players?select=*');
   ok('old players table is gone', !oldTable.ok, 'HTTP ' + oldTable.status + ' (expected error)');
