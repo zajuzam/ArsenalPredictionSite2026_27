@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theme preview — Arsenal Predictor</title>
+  <script>
+    (function(){ try{ var t=localStorage.getItem('predictor_theme')||'dark'; document.documentElement.setAttribute('data-theme',t); }catch(e){ document.documentElement.setAttribute('data-theme','dark'); } })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Preview-only: this file is NOT part of the app. It renders the
+       real styles.css against sample markup so you can eyeball the
+       dark theme without a server or login. Safe to delete anytime. */
+    .preview-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+    .preview-note { color: var(--gray-400); font-size: 0.85rem; margin: 6px 0 22px; }
+  </style>
+</head>
+<body>
+
+<header id="app-header">
+  <div class="header-inner">
+    <div class="logo">
+      <img class="logo-crest" src="https://a.espncdn.com/i/teamlogos/soccer/500/359.png" alt="Arsenal crest">
+      <span class="logo-text">Arsenal <strong>Predictor</strong></span>
+    </div>
+    <nav id="main-nav">
+      <button class="nav-btn active">Fixtures</button>
+      <button class="nav-btn">Leaderboard</button>
+      <button class="nav-btn">My Picks</button>
+      <button onclick="toggleTheme()" id="theme-toggle" class="nav-btn nav-theme">🌙 Dark</button>
+      <button class="nav-btn nav-logout">Logout</button>
+    </nav>
+  </div>
+</header>
+
+<div class="preview-wrap">
+  <div class="page-header">
+    <h2>Fixtures &amp; Predictions <span class="season-badge">2026/27</span></h2>
+    <p class="subtitle">Predict the score before kick-off · Exact = 3pts · Correct result = 1pt</p>
+  </div>
+  <p class="preview-note">Preview page — renders the real styles.css. Delete theme-preview.html before launch if you like.</p>
+
+  <div class="fixtures-filter">
+    <button class="filter-btn active">All 38</button>
+    <button class="filter-btn">🏠 Home</button>
+    <button class="filter-btn">✈ Away</button>
+    <button class="filter-btn">Upcoming</button>
+  </div>
+
+  <div class="fixture-card v2 predicted">
+    <div class="fc-header">
+      <div class="fc-header-left"><span class="fc-gw">GW 1</span><span class="fc-venue">🏠 Home</span></div>
+      <span class="fc-date">Fri 21 Aug, 20:00</span>
+    </div>
+    <div class="fc-timer" data-kickoff="">⏳ Starts in <b>26d 4h</b></div>
+    <div class="fc-teams">
+      <div class="fc-team">
+        <span class="fc-name arsenal">Arsenal <span class="fc-nick">(The Gunners)</span></span>
+        <span class="fc-captain">Martin Ødegaard</span>
+      </div>
+      <div class="fc-mid">VS</div>
+      <div class="fc-team">
+        <span class="fc-name">Coventry City <span class="fc-nick">(The Sky Blues)</span></span>
+        <span class="fc-captain">Ben Sheaf</span>
+      </div>
+    </div>
+    <div class="fc-votes">
+      <div class="fc-votes-head"><span>How players predicted</span><span class="fc-votes-total">7 picks</span></div>
+      <div class="fc-votes-bar">
+        <div class="seg win" style="width:60%"></div>
+        <div class="seg draw" style="width:25%"></div>
+        <div class="seg loss" style="width:15%"></div>
+      </div>
+      <div class="fc-votes-legend">
+        <span><i class="dot win"></i>Arsenal win <b>4</b></span>
+        <span><i class="dot draw"></i>Draw <b>2</b></span>
+        <span><i class="dot loss"></i>Coventry City win <b>1</b></span>
+      </div>
+    </div>
+    <div class="fc-footer fc-footer-predict">
+      <input class="score-input" type="number" value="2" placeholder="0">
+      <span class="score-sep">–</span>
+      <input class="score-input" type="number" value="0" placeholder="0">
+      <button class="predict-btn">Update</button>
+      <span class="fc-closes">Closes 30 min before kick-off</span>
+    </div>
+  </div>
+
+  <div class="prize-banner">
+    <span class="prize-icon">🏆</span>
+    <div>
+      <div class="prize-title">Season Prize</div>
+      <div class="prize-text">The winner receives an <strong>Original Arsenal Home Shirt</strong>!</div>
+    </div>
+  </div>
+
+  <div class="leaderboard-table" style="margin-top:20px">
+    <div class="lb-header">
+      <div>#</div><div>Player</div>
+      <div style="text-align:center">Country</div>
+      <div style="text-align:center">Points</div>
+      <div style="text-align:center">Acc</div>
+      <div style="text-align:center">⭐ Exact</div>
+      <div style="text-align:center">✓ Result</div>
+    </div>
+    <div class="lb-row me">
+      <div class="lb-rank rank-1">🥇</div>
+      <div class="lb-name"><span class="avatar" style="width:30px;height:30px;background:#EF0107;font-size:12px">SA</span>
+        <span class="lb-name-txt"><span class="lb-uname">saju <span class="me-tag">You</span></span>
+        <span class="lb-badges"><span class="badge">👑 Leader</span></span></span></div>
+      <div class="lb-country" style="text-align:center">—</div>
+      <div class="lb-pts" style="text-align:center">12</div>
+      <div class="lb-acc" style="text-align:center">67%</div>
+      <div class="lb-exact" style="text-align:center">2</div>
+      <div class="lb-correct" style="text-align:center">4</div>
+    </div>
+    <div class="lb-row">
+      <div class="lb-rank">2</div>
+      <div class="lb-name"><span class="avatar" style="width:30px;height:30px;background:#1a2a5e;font-size:12px">TU</span>
+        <span class="lb-name-txt"><span class="lb-uname">tunde9ja</span>
+        <span class="lb-badges"><span class="badge">🎯 Sharp</span></span></span></div>
+      <div class="lb-country" style="text-align:center">🇳🇬</div>
+      <div class="lb-pts" style="text-align:center">9</div>
+      <div class="lb-acc" style="text-align:center">55%</div>
+      <div class="lb-exact" style="text-align:center">1</div>
+      <div class="lb-correct" style="text-align:center">6</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap">
+    <button class="btn btn-primary" style="width:auto;padding:10px 20px">Sign In</button>
+    <button class="btn btn-secondary" style="width:auto;padding:10px 20px">Secondary</button>
+    <button class="btn btn-gold" style="width:auto;padding:10px 20px">📋 Enter Results</button>
+    <span class="points-badge pts-3">⭐ Exact! · 3pts</span>
+    <span class="points-badge pts-1">✓ Correct · 1pt</span>
+    <span class="points-badge pts-0">✗ Wrong</span>
+  </div>
+
+  <div class="auth-error" style="display:block;margin-top:22px">Incorrect username or PIN.</div>
+</div>
+
+<script>
+  function applyTheme(theme){var t=theme==='light'?'light':'dark';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('predictor_theme',t);}catch(e){}var b=document.getElementById('theme-toggle');if(b)b.textContent=t==='dark'?'🌙 Dark':'☀️ Light';}
+  function toggleTheme(){var c=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';applyTheme(c==='dark'?'light':'dark');}
+  applyTheme(document.documentElement.getAttribute('data-theme')||'dark');
+</script>
+
+</body>
+</html>

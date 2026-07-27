@@ -12,10 +12,27 @@ let currentFilter = 'all';
 
 const API = CONFIG.apiUrl;
 
+// ── Theme (light / dark) ─────────────────────────────────────
+// The chosen theme is stored on <html data-theme="…"> and remembered
+// in localStorage. An inline script in index.html applies it before
+// paint; this keeps the header button's label in sync and toggles it.
+function applyTheme(theme) {
+  const t = theme === 'light' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('predictor_theme', t); } catch (e) {}
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = t === 'dark' ? '🌙 Dark' : '☀️ Light';
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+}
+
 // ── Bootstrap ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', init);
 
 async function init() {
+  applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
   const saved = localStorage.getItem('predictor_user');
   if (saved) {
     try {
@@ -616,7 +633,7 @@ function renderFixtureCard(f, now) {
   } else {
     const ph = prediction ? prediction.predicted_home : '';
     const pa = prediction ? prediction.predicted_away : '';
-    footer = `<div class="fc-footer">
+    footer = `<div class="fc-footer fc-footer-predict">
       <input class="score-input" type="number" min="0" max="20" value="${ph}" id="ph-${f.id}" placeholder="0">
       <span class="score-sep">–</span>
       <input class="score-input" type="number" min="0" max="20" value="${pa}" id="pa-${f.id}" placeholder="0">
